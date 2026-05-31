@@ -500,6 +500,7 @@ footer {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;        /* hero-* の delay を除去: opacity:0 期間を排除 */
     transition-duration: 0.01ms !important;
   }
   /* reveal 要素を即座に表示 */

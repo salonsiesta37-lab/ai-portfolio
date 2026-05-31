@@ -232,7 +232,8 @@ function initContactForm() {
 // ── カスタムカーソル ─────────────────────────────────────────
 
 /**
- * カーソルアニメーションループ（単一責任: rAF 描画のみ）
+ * カーソルリングの線形補間を1フレーム分実行する（単一責任: 座標計算と描画のみ）
+ * rAF の再スケジュールは initCursor 内の loop() が担当する
  * @param {CursorElements} els
  * @param {Vec2} mouse  マウス座標（参照型で最新値を参照）
  * @param {Vec2} ring   リング現在座標（参照型で更新）
@@ -244,7 +245,7 @@ function runCursorLoop(els, mouse, ring) {
   ring.y += (mouse.y - ring.y) * CONFIG.CURSOR_LERP;
   els.ring.style.left = `${ring.x}px`;
   els.ring.style.top  = `${ring.y}px`;
-  requestAnimationFrame(() => runCursorLoop(els, mouse, ring));
+  // ※ requestAnimationFrame の再スケジュールは initCursor の loop() が担当
 }
 
 /**
@@ -267,6 +268,10 @@ function initCursor() {
   const ring = document.getElementById('curRing');
   if (!dot || !ring) return;
 
+  // prefers-reduced-motion チェック: 動き軽減設定の場合はカーソルを起動しない
+  // （CSS 側で cur/cur-ring を display:none にするが、JS ループの無駄な計算も防ぐ）
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
   /** @type {CursorElements} */
   const els = { dot, ring };
 
@@ -275,6 +280,15 @@ function initCursor() {
 
   /** @type {Vec2} リング描画座標 */
   const ringPos = { x: 0, y: 0 };
+
+  /** @type {number} cancelAnimationFrame 用 ID */
+  let rafId = 0;
+
+  // rAF ループ本体: cancelAnimationFrame(rafId) で停止可能
+  function loop() {
+    runCursorLoop(els, mouse, ringPos);
+    rafId = requestAnimationFrame(loop);
+  }
 
   // マウス移動: ドットは即時追従
   document.addEventListener('mousemove', (e) => {
@@ -296,8 +310,17 @@ function initCursor() {
     }
   });
 
+  // タブ非表示時にループを停止してバックグラウンドでの無駄な計算を防止
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      cancelAnimationFrame(rafId);
+    } else {
+      rafId = requestAnimationFrame(loop);
+    }
+  });
+
   // rAF ループ開始
-  runCursorLoop(els, mouse, ringPos);
+  rafId = requestAnimationFrame(loop);
 }
 
 // ── ヘッダースクロール ───────────────────────────────────────
