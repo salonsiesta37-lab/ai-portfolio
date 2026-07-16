@@ -272,6 +272,9 @@ function initCursor() {
   // （CSS 側で cur/cur-ring を display:none にするが、JS ループの無駄な計算も防ぐ）
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+  // タッチ端末（マウスなし）ではカスタムカーソル自体を起動しない
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
   /** @type {CursorElements} */
   const els = { dot, ring };
 
@@ -290,12 +293,23 @@ function initCursor() {
     rafId = requestAnimationFrame(loop);
   }
 
+  /** @type {boolean} 初回 mousemove 済みフラグ（フェードイン制御用） */
+  let cursorShown = false;
+
   // マウス移動: ドットは即時追従
   document.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
     dot.style.left = `${mouse.x}px`;
     dot.style.top  = `${mouse.y}px`;
+    if (!cursorShown) {
+      cursorShown = true;
+      // 初回はリングもマウス位置から追従開始させ、画面外から滑ってくるのを防ぐ
+      ringPos.x = mouse.x;
+      ringPos.y = mouse.y;
+      dot.classList.add('cur--on');
+      ring.classList.add('cur-ring--on');
+    }
   });
 
   // インタラクティブ要素のホバー検知（イベント委譲）
