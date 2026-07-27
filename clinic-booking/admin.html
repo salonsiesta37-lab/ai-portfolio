@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' https://fonts.googleapis.com;
+                 font-src 'self' https://fonts.gstatic.com;
+                 img-src 'self' data:;
+                 connect-src 'self' https://script.google.com https://script.googleusercontent.com;
+                 form-action 'none'; object-src 'none'; base-uri 'self';">
+
+  <title>予約一覧（受付用） | かめいクリニック</title>
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/booking.css">
+</head>
+<body class="admin">
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="clinic-name" id="clinicName">かめいクリニック</p>
+      <p class="clinic-sub">予約一覧（受付用）</p>
+      <a class="header-tel" href="index.html">予約フォームを開く</a>
+    </div>
+  </header>
+
+  <!-- パスコード入力 -->
+  <main class="page page-narrow" id="lockScreen" hidden>
+    <section class="card" aria-labelledby="lock-title">
+      <h1 class="card-title" id="lock-title">受付用パスコード</h1>
+      <p class="lock-lead">この画面はクリニック内でのみご利用ください。</p>
+      <form class="lock-form" id="lockForm" novalidate>
+        <div class="form-group">
+          <label for="passcode">パスコード</label>
+          <input id="passcode" type="password" autocomplete="current-password" inputmode="numeric">
+          <p class="field-error" id="lockError" role="alert"></p>
+        </div>
+        <button type="submit" class="btn btn-primary">開く</button>
+      </form>
+    </section>
+  </main>
+
+  <main class="page page-wide" id="adminScreen" hidden>
+
+    <div class="page-head">
+      <p class="page-label" aria-hidden="true">Reservation List</p>
+      <h1 class="page-title">予約一覧</h1>
+    </div>
+
+    <p class="live-region" id="liveRegion" role="status" aria-live="polite"></p>
+
+    <!-- 集計 -->
+    <div class="stat-row" id="statRow">
+      <div class="stat"><p class="stat-label">本日の予約</p><p class="stat-value" id="statToday">0</p></div>
+      <div class="stat"><p class="stat-label">明日の予約</p><p class="stat-value" id="statTomorrow">0</p></div>
+      <div class="stat"><p class="stat-label">今後の予約</p><p class="stat-value" id="statUpcoming">0</p></div>
+      <div class="stat"><p class="stat-label">キャンセル</p><p class="stat-value" id="statCanceled">0</p></div>
+    </div>
+
+    <!-- 枠ビュー -->
+    <section class="card" aria-labelledby="board-title">
+      <div class="card-head">
+        <h2 class="card-title" id="board-title">予約枠の状況</h2>
+        <div class="card-tools">
+          <label class="inline-label" for="boardDate">日付</label>
+          <input id="boardDate" type="date">
+          <label class="inline-label" for="boardType">種別</label>
+          <select id="boardType"></select>
+        </div>
+      </div>
+      <p class="board-hours" id="boardHours"></p>
+      <div class="board" id="board"></div>
+    </section>
+
+    <!-- 一覧 -->
+    <section class="card" aria-labelledby="list-title">
+      <div class="card-head">
+        <h2 class="card-title" id="list-title">予約リスト</h2>
+        <div class="card-tools">
+          <button type="button" class="btn btn-ghost" id="reload" hidden>再読み込み</button>
+          <button type="button" class="btn btn-ghost" id="exportCsv">CSV 出力</button>
+          <button type="button" class="btn btn-ghost" id="printList">印刷</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="inline-label" for="filterFrom">期間</label>
+          <input id="filterFrom" type="date">
+          <span class="tilde">〜</span>
+          <input id="filterTo" type="date">
+        </div>
+        <div class="filter-group">
+          <button type="button" class="chip is-active" data-range="today">本日</button>
+          <button type="button" class="chip" data-range="week">今後 7 日</button>
+          <button type="button" class="chip" data-range="month">今後 30 日</button>
+          <button type="button" class="chip" data-range="all">すべて</button>
+        </div>
+        <div class="filter-group">
+          <label class="inline-label" for="filterStatus">状態</label>
+          <select id="filterStatus">
+            <option value="active">キャンセル以外</option>
+            <option value="all">すべて</option>
+            <option value="reserved">予約済み</option>
+            <option value="visited">来院済み</option>
+            <option value="canceled">キャンセル</option>
+          </select>
+          <label class="inline-label" for="filterKeyword">検索</label>
+          <input id="filterKeyword" type="search" placeholder="お名前・電話番号・予約番号">
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="list-table">
+          <caption class="visually-hidden">予約の一覧</caption>
+          <thead>
+            <tr>
+              <th scope="col">日時</th>
+              <th scope="col">種別</th>
+              <th scope="col">お名前</th>
+              <th scope="col">生年月日</th>
+              <th scope="col">連絡先</th>
+              <th scope="col">症状・ご要望</th>
+              <th scope="col">状態</th>
+              <th scope="col" class="col-action">操作</th>
+            </tr>
+          </thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+      <p class="list-empty" id="listEmpty" hidden>該当する予約はありません。</p>
+    </section>
+
+    <!-- データ管理 -->
+    <section class="card" aria-labelledby="data-title">
+      <h2 class="card-title" id="data-title">データの保存先</h2>
+      <p class="data-note" id="dataNote"></p>
+      <div class="panel-actions panel-actions--left">
+        <button type="button" class="btn btn-ghost" id="exportJson">バックアップを保存</button>
+        <label class="btn btn-ghost btn-file">
+          バックアップを読み込む
+          <input type="file" id="importJson" accept="application/json" hidden>
+        </label>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

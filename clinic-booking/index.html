@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!--
+    CSP: 予約フォームは患者さんの個人情報を扱うため、読み込み先を最小限に限定します。
+    - script-src  'self'                        → 外部・インラインスクリプトを遮断
+    - connect-src Apps Script のみ許可          → 予約データの送信先を限定
+    - form-action 'none'                        → フォームの外部送信を遮断（送信は JS 経由）
+  -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self';
+                 style-src 'self' https://fonts.googleapis.com;
+                 font-src 'self' https://fonts.gstatic.com;
+                 img-src 'self' data:;
+                 connect-src 'self' https://script.google.com https://script.googleusercontent.com;
+                 form-action 'none'; object-src 'none'; base-uri 'self';">
+
+  <title>Web予約 | かめいクリニック</title>
+  <meta name="description" content="かめいクリニックの Web 予約フォームです。診療時間に合わせた予約枠から、ご希望の日時をお選びいただけます。初診の方は 20 分に 1 名様のご案内です。">
+  <meta name="robots" content="noindex">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/booking.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="clinic-name" id="clinicName">かめいクリニック</p>
+      <p class="clinic-sub" id="clinicNameEn">KAMEI CLINIC</p>
+      <a class="header-tel" id="headerTel" href="#" hidden>お電話でのご予約</a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <div class="page-head">
+      <p class="page-label" aria-hidden="true">Reservation</p>
+      <h1 class="page-title">Web 予約</h1>
+      <p class="page-lead">
+        ご希望の日時を選び、問診内容をご入力ください。<br>
+        ご入力いただいた内容は、そのままクリニックの受付へ送信されます。
+      </p>
+    </div>
+
+    <!-- 進行状況 -->
+    <ol class="stepper" id="stepper" aria-label="予約の進行状況">
+      <li class="step is-current" data-step="1"><span class="step-no">1</span>受診内容</li>
+      <li class="step" data-step="2"><span class="step-no">2</span>日時</li>
+      <li class="step" data-step="3"><span class="step-no">3</span>問診入力</li>
+      <li class="step" data-step="4"><span class="step-no">4</span>確認</li>
+    </ol>
+
+    <!-- 通信・エラーの読み上げ用 -->
+    <p class="live-region" id="liveRegion" role="status" aria-live="polite"></p>
+
+    <!-- ══ STEP 1: 受付種別 ══ -->
+    <section class="card panel" id="panel1" aria-labelledby="panel1-title">
+      <h2 class="card-title" id="panel1-title">1. 受診内容をお選びください</h2>
+      <div class="type-list" id="typeList" role="radiogroup" aria-label="受付種別"></div>
+
+      <div class="hours-box">
+        <h3 class="hours-title">診療時間</h3>
+        <table class="hours-table" id="hoursTable">
+          <caption class="visually-hidden">曜日ごとの診療時間</caption>
+          <tbody></tbody>
+        </table>
+        <p class="hours-note" id="hoursNote"></p>
+      </div>
+
+      <div class="panel-actions">
+        <button type="button" class="btn btn-primary" id="toStep2">日時を選ぶ</button>
+      </div>
+    </section>
+
+    <!-- ══ STEP 2: 日時選択 ══ -->
+    <section class="card panel" id="panel2" aria-labelledby="panel2-title" hidden>
+      <h2 class="card-title" id="panel2-title">2. ご希望の日時をお選びください</h2>
+
+      <div class="date-nav">
+        <button type="button" class="btn btn-ghost" id="prevWeek">← 前の 7 日</button>
+        <p class="date-range" id="dateRange"></p>
+        <button type="button" class="btn btn-ghost" id="nextWeek">次の 7 日 →</button>
+      </div>
+
+      <div class="date-grid" id="dateGrid" role="group" aria-label="来院日"></div>
+
+      <div class="slot-area">
+        <h3 class="slot-head" id="slotHead">日付を選択してください</h3>
+        <p class="slot-legend">
+          <span class="legend-item"><span class="dot dot-open"></span>空きあり</span>
+          <span class="legend-item"><span class="dot dot-full"></span>満枠・受付終了</span>
+        </p>
+        <div class="slot-grid" id="slotGrid" role="group" aria-label="来院時間"></div>
+        <p class="slot-empty" id="slotEmpty" hidden></p>
+      </div>
+
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost" id="backTo1">戻る</button>
+        <button type="button" class="btn btn-primary" id="toStep3" disabled>問診入力へ</button>
+      </div>
+    </section>
+
+    <!-- ══ STEP 3: 問診入力 ══ -->
+    <section class="card panel" id="panel3" aria-labelledby="panel3-title" hidden>
+      <h2 class="card-title" id="panel3-title">3. 問診内容をご入力ください</h2>
+      <p class="selected-summary" id="selectedSummary"></p>
+
+      <form class="booking-form" id="bookingForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-name">お名前 <span class="req">必須</span></label>
+            <input id="f-name" name="name" type="text" maxlength="50" autocomplete="name"
+                   placeholder="亀井 花子" required aria-required="true" aria-describedby="e-name">
+            <p class="field-error" id="e-name" role="alert"></p>
+          </div>
+          <div class="form-group">
+            <label for="f-kana">ふりがな <span class="req">必須</span></label>
+            <input id="f-kana" name="kana" type="text" maxlength="50" autocomplete="off"
+                   placeholder="かめい はなこ" required aria-required="true" aria-describedby="e-kana">
+            <p class="field-error" id="e-kana" role="alert"></p>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-birthday">生年月日 <span class="req">必須</span></label>
+            <input id="f-birthday" name="birthday" type="date" autocomplete="bday"
+                   required aria-required="true" aria-describedby="e-birthday">
+            <p class="field-error" id="e-birthday" role="alert"></p>
+          </div>
+          <div class="form-group">
+            <label for="f-sex">性別</label>
+            <select id="f-sex" name="sex">
+              <option value="female">女性</option>
+              <option value="male">男性</option>
+              <option value="other">回答しない</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-tel">電話番号 <span class="req">必須</span></label>
+            <input id="f-tel" name="tel" type="tel" maxlength="20" autocomplete="tel"
+                   placeholder="078-000-0000" required aria-required="true" aria-describedby="e-tel">
+            <p class="field-error" id="e-tel" role="alert"></p>
+          </div>
+          <div class="form-group">
+            <label for="f-email">メールアドレス <span class="opt">任意</span></label>
+            <input id="f-email" name="email" type="email" maxlength="100" autocomplete="email"
+                   placeholder="example@mail.com" aria-describedby="e-email">
+            <p class="field-error" id="e-email" role="alert"></p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="f-insurance">保険証</label>
+          <select id="f-insurance" name="insurance">
+            <option value="持参します">持参します</option>
+            <option value="マイナ保険証を利用します">マイナ保険証を利用します</option>
+            <option value="持参できません">持参できません</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="f-symptom">症状・ご要望 <span class="opt">任意</span></label>
+          <textarea id="f-symptom" name="symptom" rows="5" maxlength="500"
+                    placeholder="いつ頃からどのような症状があるか、服用中のお薬などをご記入ください。"
+                    aria-describedby="e-symptom"></textarea>
+          <p class="char-count"><span id="symptomCount">0</span> / 500 文字</p>
+          <p class="field-error" id="e-symptom" role="alert"></p>
+        </div>
+
+        <div class="panel-actions">
+          <button type="button" class="btn btn-ghost" id="backTo2">戻る</button>
+          <button type="submit" class="btn btn-primary">入力内容を確認</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ══ STEP 4: 確認 ══ -->
+    <section class="card panel" id="panel4" aria-labelledby="panel4-title" hidden>
+      <h2 class="card-title" id="panel4-title">4. 内容をご確認ください</h2>
+      <p class="confirm-lead">この内容でクリニックへ送信します。</p>
+
+      <dl class="confirm-list" id="confirmList"></dl>
+
+      <div class="notice-box">
+        <h3 class="notice-title">ご来院にあたって</h3>
+        <ul class="notice-list" id="noticeList"></ul>
+      </div>
+
+      <p class="submit-error" id="submitError" role="alert" hidden></p>
+
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost" id="backTo3">修正する</button>
+        <button type="button" class="btn btn-primary" id="submitBooking">この内容で予約する</button>
+      </div>
+    </section>
+
+    <!-- ══ 完了 ══ -->
+    <section class="card panel panel-done" id="panelDone" aria-labelledby="done-title" hidden>
+      <p class="done-mark" aria-hidden="true">✓</p>
+      <h2 class="card-title" id="done-title">ご予約を受け付けました</h2>
+
+      <div class="done-summary">
+        <p class="done-code">予約番号 <strong id="doneCode"></strong></p>
+        <p class="done-when" id="doneWhen"></p>
+        <p class="done-type" id="doneType"></p>
+      </div>
+
+      <div class="mailto-box" id="mailtoBox" hidden>
+        <p class="mailto-lead">
+          最後にメールソフトが開きます。<strong>そのまま送信</strong>してください。<br>
+          自動で開かない場合は、下のボタンを押してください。
+        </p>
+        <a class="btn btn-primary" id="mailtoLink" href="#">クリニックへ予約内容を送信する</a>
+      </div>
+
+      <p class="done-note" id="doneNote"></p>
+
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost" id="restart">続けて予約する</button>
+      </div>
+    </section>
+
+    <p class="page-foot">
+      ご予約の変更・キャンセルは <span id="footTel">お電話</span> にてご連絡ください。
+    </p>
+
+  </main>
+
+  <script type="module" src="js/booking.js"></script>
+</body>
+</html>
