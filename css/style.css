@@ -18,15 +18,32 @@
 
 /* ── Reset ──────────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* 固定ヘッダー(70px)の下にアンカー先が隠れないようにする */
+  scroll-padding-top: 84px;
+}
 body {
   font-family: 'Shippori Mincho', serif;
   background: var(--cream);
   color: var(--brown);
   overflow-x: hidden;
-  cursor: none;
 }
-a, button, input, textarea { cursor: none; }
+/* テキスト選択色もブランドトーンに合わせる */
+::selection { background: var(--gold); color: var(--white); }
+
+/* キーボード操作時のみゴールドの細線フォーカスリングを表示 */
+:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 4px;
+}
+.form-group input:focus-visible,
+.form-group textarea:focus-visible { outline: none; }
+
+/* カーソル非表示はマウス環境のみ（タッチ端末では通常挙動を維持） */
+@media (hover: hover) and (pointer: fine) {
+  body, a, button, input, textarea { cursor: none; }
+}
 
 /* ── Custom Cursor ──────────────────────────────────────────────── */
 .cur {
@@ -34,15 +51,19 @@ a, button, input, textarea { cursor: none; }
   background: var(--gold); border-radius: 50%;
   pointer-events: none; z-index: 9999;
   transform: translate(-50%, -50%);
-  transition: width .2s, height .2s, background .2s;
+  transition: width .2s, height .2s, background .2s, opacity .3s;
+  /* 初回 mousemove まで非表示（タッチ端末で左上に残留するのを防ぐ） */
+  left: -100px; top: -100px; opacity: 0;
 }
 .cur-ring {
   position: fixed; width: 34px; height: 34px;
   border: 1px solid rgba(201,169,110,.55); border-radius: 50%;
   pointer-events: none; z-index: 9998;
   transform: translate(-50%, -50%);
-  transition: width .4s var(--ease), height .4s var(--ease), border-color .3s;
+  transition: width .4s var(--ease), height .4s var(--ease), border-color .3s, opacity .3s;
+  left: -100px; top: -100px; opacity: 0;
 }
+.cur--on, .cur-ring--on { opacity: 1; }
 /* ホバー時のカーソルスタイル（クラスで制御） */
 .cur--hover  { width: 12px; height: 12px; background: var(--brown); }
 .cur-ring--hover { width: 50px; height: 50px; border-color: rgba(44,26,14,.5); }
@@ -183,6 +204,7 @@ section { padding: 120px 80px; }
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(38px, 4.2vw, 58px); font-weight: 300;
   color: var(--brown); line-height: 1.08; margin-bottom: 8px;
+  text-wrap: balance;
 }
 .section-title-ja {
   font-family: 'Shippori Mincho', serif;
@@ -480,7 +502,10 @@ footer {
 }
 @media (max-width: 768px) {
   header        { padding: 0 24px; }
-  nav           { display: none; }
+  /* モバイルではナビリンクを畳み、CONTACT ボタンだけ残す */
+  nav               { gap: 0; }
+  nav a:not(.nav-cta) { display: none; }
+  .nav-cta          { padding: 8px 18px; }
   section       { padding: 72px 24px; }
   .hero         { padding: 0 28px; min-height: 100svh; }
   .hero-deco    { display: none; }
