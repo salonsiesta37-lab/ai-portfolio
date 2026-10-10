@@ -13,16 +13,6 @@
 // ── 型定義 ──────────────────────────────────────────────────────
 
 /**
- * 2D 座標
- * @typedef {{ x: number, y: number }} Vec2
- */
-
-/**
- * カーソル DOM 要素
- * @typedef {{ dot: HTMLElement, ring: HTMLElement }} CursorElements
- */
-
-/**
  * フォーム検証結果
  * @typedef {{ valid: boolean, errorMessage: string }} ValidationResult
  */
@@ -35,10 +25,6 @@
 /**
  * アプリケーション設定
  * @typedef {{
- *   CURSOR_LERP:        number,
- *   CURSOR_HOVER_DOT:   number,
- *   CURSOR_HOVER_RING:  number,
- *   SCROLL_THRESHOLD:   number,
  *   FORM_RESET_DELAY:   number,
  *   REVEAL_THRESHOLD:   number,
  *   REVEAL_MARGIN:      string,
@@ -53,14 +39,6 @@
 
 /** @type {Readonly<AppConfig>} */
 const CONFIG = Object.freeze({
-  /** カーソルリングの線形補間係数 */
-  CURSOR_LERP:        0.11,
-  /** ホバー時のカーソルドットサイズ (px) */
-  CURSOR_HOVER_DOT:   12,
-  /** ホバー時のカーソルリングサイズ (px) */
-  CURSOR_HOVER_RING:  50,
-  /** ヘッダーシャドウ発動スクロール量 (px) */
-  SCROLL_THRESHOLD:   20,
   /** フォームリセット遅延 (ms) */
   FORM_RESET_DELAY:   3000,
   /** IntersectionObserver 表示しきい値 */
@@ -229,114 +207,22 @@ function initContactForm() {
   form.addEventListener('submit', handleContactSubmit);
 }
 
-// ── カスタムカーソル ─────────────────────────────────────────
-
-/**
- * カーソルリングの線形補間を1フレーム分実行する（単一責任: 座標計算と描画のみ）
- * rAF の再スケジュールは initCursor 内の loop() が担当する
- * @param {CursorElements} els
- * @param {Vec2} mouse  マウス座標（参照型で最新値を参照）
- * @param {Vec2} ring   リング現在座標（参照型で更新）
- * @returns {void}
- */
-function runCursorLoop(els, mouse, ring) {
-  // 線形補間でリングをなめらかに追従
-  ring.x += (mouse.x - ring.x) * CONFIG.CURSOR_LERP;
-  ring.y += (mouse.y - ring.y) * CONFIG.CURSOR_LERP;
-  els.ring.style.left = `${ring.x}px`;
-  els.ring.style.top  = `${ring.y}px`;
-  // ※ requestAnimationFrame の再スケジュールは initCursor の loop() が担当
-}
-
-/**
- * カーソルのホバー状態を更新する（単一責任: ホバー CSS クラスの切替のみ）
- * @param {CursorElements} els
- * @param {boolean} isHover
- * @returns {void}
- */
-function setCursorHover(els, isHover) {
-  els.dot.classList.toggle('cur--hover',      isHover);
-  els.ring.classList.toggle('cur-ring--hover', isHover);
-}
-
-/**
- * カスタムカーソルを初期化する（単一責任: カーソル機能のみ）
- * @returns {void}
- */
-function initCursor() {
-  const dot  = document.getElementById('cur');
-  const ring = document.getElementById('curRing');
-  if (!dot || !ring) return;
-
-  // prefers-reduced-motion チェック: 動き軽減設定の場合はカーソルを起動しない
-  // （CSS 側で cur/cur-ring を display:none にするが、JS ループの無駄な計算も防ぐ）
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  /** @type {CursorElements} */
-  const els = { dot, ring };
-
-  /** @type {Vec2} マウス現在座標 */
-  const mouse = { x: 0, y: 0 };
-
-  /** @type {Vec2} リング描画座標 */
-  const ringPos = { x: 0, y: 0 };
-
-  /** @type {number} cancelAnimationFrame 用 ID */
-  let rafId = 0;
-
-  // rAF ループ本体: cancelAnimationFrame(rafId) で停止可能
-  function loop() {
-    runCursorLoop(els, mouse, ringPos);
-    rafId = requestAnimationFrame(loop);
-  }
-
-  // マウス移動: ドットは即時追従
-  document.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    dot.style.left = `${mouse.x}px`;
-    dot.style.top  = `${mouse.y}px`;
-  });
-
-  // インタラクティブ要素のホバー検知（イベント委譲）
-  document.addEventListener('mouseover', (e) => {
-    if (e.target instanceof Element && e.target.closest('a, button')) {
-      setCursorHover(els, true);
-    }
-  });
-  document.addEventListener('mouseout', (e) => {
-    if (e.target instanceof Element && e.target.closest('a, button')) {
-      setCursorHover(els, false);
-    }
-  });
-
-  // タブ非表示時にループを停止してバックグラウンドでの無駄な計算を防止
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      cancelAnimationFrame(rafId);
-    } else {
-      rafId = requestAnimationFrame(loop);
-    }
-  });
-
-  // rAF ループ開始
-  rafId = requestAnimationFrame(loop);
-}
-
 // ── ヘッダースクロール ───────────────────────────────────────
 
 /**
  * スクロール時のヘッダーシャドウを初期化する（単一責任: ヘッダー制御のみ）
+ * scroll イベントは毎フレーム発火するため使わず、ページ最上部の
+ * センチネル要素が画面外に出たかを IntersectionObserver で監視する
  * @returns {void}
  */
 function initScrollHeader() {
-  const header = document.getElementById('header');
-  if (!header) return;
-  window.addEventListener(
-    'scroll',
-    () => { header.classList.toggle('scrolled', window.scrollY > CONFIG.SCROLL_THRESHOLD); },
-    { passive: true },
-  );
+  const header   = document.getElementById('header');
+  const sentinel = document.getElementById('scrollSentinel');
+  if (!header || !sentinel) return;
+  const io = new IntersectionObserver(([entry]) => {
+    header.classList.toggle('scrolled', !entry.isIntersecting);
+  });
+  io.observe(sentinel);
 }
 
 // ── スクロールリビール ───────────────────────────────────────
@@ -400,11 +286,15 @@ function initWorksFilter() {
   const workCards = /** @type {NodeListOf<HTMLElement>} */ (
     document.querySelectorAll('.work-card')
   );
+  const grid = document.getElementById('worksGrid');
 
   filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter ?? 'all';
       updateFilterButtons(filterBtns, btn);
-      updateWorkCards(workCards, btn.dataset.filter ?? 'all');
+      updateWorkCards(workCards, filter);
+      // 絞り込み中は非対称レイアウトを解除し、空きセルを作らない
+      grid?.classList.toggle('is-filtered', filter !== 'all');
     });
   });
 }
@@ -416,7 +306,6 @@ function initWorksFilter() {
  * @returns {void}
  */
 function main() {
-  initCursor();
   initScrollHeader();
   initReveal();
   initWorksFilter();
