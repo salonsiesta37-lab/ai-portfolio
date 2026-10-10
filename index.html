@@ -36,6 +36,12 @@
   <meta name="twitter:description" content="Claude・NotebookLM などの生成 AI を活用した医療・訪問看護・美容サロン向けデザインの制作実績をご紹介します。">
   <meta name="twitter:image"       content="https://salonsiesta37-lab.github.io/ai-portfolio/iCeIWyyM31_full.png">
 
+  <!-- テーマ: OS のライト / ダーク設定に追従 -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#FDF5EE" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C130C" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+
   <!-- Canonical -->
   <link rel="canonical" href="https://salonsiesta37-lab.github.io/ai-portfolio/">
 
@@ -46,12 +52,18 @@
 
   <!-- 外部 CSS（インラインスタイルを排除して CSP に準拠） -->
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- LCP: ヒーロー画像を先読み -->
+  <link rel="preload" as="image" type="image/webp"
+        href="img/siesta-flyer-640.webp"
+        imagesrcset="img/siesta-flyer-640.webp 640w, img/siesta-flyer-1200.webp 1200w"
+        imagesizes="(max-width: 768px) 60vw, 300px">
 </head>
 <body>
 
-  <!-- カスタムカーソル -->
-  <div class="cur"      id="cur"     aria-hidden="true"></div>
-  <div class="cur-ring" id="curRing" aria-hidden="true"></div>
+  <a href="#main" class="skip-link">本文へスキップ</a>
+  <!-- ヘッダーの影切替用センチネル（scroll イベントの代わりに IntersectionObserver で監視） -->
+  <div class="scroll-sentinel" id="scrollSentinel" aria-hidden="true"></div>
 
   <!-- ══ HEADER ══ -->
   <header id="header" role="banner">
@@ -67,54 +79,56 @@
     </nav>
   </header>
 
+  <main id="main">
+
   <!-- ══ HERO ══ -->
   <section class="hero" id="home" aria-labelledby="hero-title">
-    <div class="hero-bg"   aria-hidden="true"></div>
-    <div class="hero-deco" aria-hidden="true"></div>
+    <div class="hero-bg" aria-hidden="true"></div>
     <div class="hero-content">
-      <p class="hero-label" aria-hidden="true">AI Creative Portfolio</p>
       <h1 class="hero-title" id="hero-title">
-        Design with<br>
-        <em>Artificial Intelligence</em>
+        Design with <em>Artificial Intelligence</em>
       </h1>
       <p class="hero-title-ja">医療・介護・美容 × AI デザイン</p>
       <p class="hero-desc">
-        Claude・NotebookLM などの生成 AI を活用し、<br>
-        地域医療・訪問看護・美容サロンの現場に<br>
-        伝わるデザインとコンテンツをお届けします。
+        Claude や NotebookLM を使い、訪問看護・医療・美容サロンの情報を伝わるデザインに仕上げます。
       </p>
       <a href="#works" class="hero-cta">実績を見る</a>
     </div>
-    <div class="hero-scroll" aria-hidden="true">
-      <span>SCROLL</span>
-      <div class="scroll-line"></div>
+    <!-- 実際の制作物をヒーロービジュアルとして重ねて配置 -->
+    <div class="hero-visual" aria-hidden="true">
+      <img class="hero-visual__back"
+           src="img/wagokoro-care-640.webp"
+           srcset="img/wagokoro-care-640.webp 640w, img/wagokoro-care-1200.webp 1200w"
+           sizes="(max-width: 768px) 55vw, 340px"
+           width="640" height="640"
+           alt=""
+           decoding="async">
+      <img class="hero-visual__front"
+           src="img/siesta-flyer-640.webp"
+           srcset="img/siesta-flyer-640.webp 640w, img/siesta-flyer-1200.webp 1200w"
+           sizes="(max-width: 768px) 60vw, 300px"
+           width="640" height="905"
+           alt=""
+           fetchpriority="high"
+           decoding="async">
     </div>
   </section>
 
-  <div class="divider" role="separator" aria-hidden="true"></div>
-
   <!-- ══ ABOUT ══ -->
   <section class="about" id="about" aria-labelledby="about-title">
-    <p class="section-label reveal" aria-hidden="true">Profile</p>
     <h2 class="section-title reveal" id="about-title">About</h2>
     <p class="section-title-ja reveal">プロフィール</p>
 
     <div class="about-grid">
       <div class="about-text reveal">
         <p>
-          医療・介護・美容業界に特化した <strong>AI 活用クリエイター</strong>です。
-          Anthropic Claude・Google NotebookLM など最先端の生成 AI を駆使し、
-          専門的な情報をわかりやすく美しく伝えるコンテンツを制作しています。
+          医療・介護・美容業界に特化した <strong>AI 活用クリエイター</strong>です。Anthropic Claude・Google NotebookLM など最先端の生成 AI を駆使し、専門的な情報をわかりやすく美しく伝えるコンテンツを制作しています。
         </p>
         <p>
-          訪問看護ステーション・美容サロンなど地域密着型ビジネスの
-          <strong>デジタル変革を支援</strong>することを使命とし、
-          ロゴ・チラシ・インフォグラフィック・Web フォームまで
-          幅広いアウトプットに対応しています。
+          訪問看護ステーション・美容サロンなど地域密着型ビジネスの<strong>デジタル変革を支援</strong>することを使命とし、ロゴ・チラシ・インフォグラフィック・Web フォームまで幅広いアウトプットに対応しています。
         </p>
         <p>
-          AI を「ツール」として使いこなし、人間ならではの感性と
-          組み合わせることで、業界に合った温かみのある成果物を届けます。
+          AI を「ツール」として使いこなし、人間ならではの感性と組み合わせることで、業界に合った温かみのある成果物を届けます。
         </p>
         <div class="about-sectors" aria-label="対応分野">
           <span class="sector-tag">医療・介護</span>
@@ -132,14 +146,14 @@
           <li class="tool-item">
             <div class="tool-icon" aria-hidden="true">Cl</div>
             <div class="tool-info">
-              <h4>Claude — Anthropic</h4>
+              <h4>Claude <span>Anthropic</span></h4>
               <p>コンテンツ生成・コーディング・デザイン提案・PDF 自動生成</p>
             </div>
           </li>
           <li class="tool-item">
             <div class="tool-icon" aria-hidden="true">NL</div>
             <div class="tool-info">
-              <h4>NotebookLM — Google</h4>
+              <h4>NotebookLM <span>Google</span></h4>
               <p>資料分析・インフォグラフィック生成・情報可視化</p>
             </div>
           </li>
@@ -162,11 +176,9 @@
     </div>
   </section>
 
-  <div class="divider" role="separator" aria-hidden="true"></div>
 
   <!-- ══ WORKS ══ -->
   <section class="works" id="works" aria-labelledby="works-title">
-    <p class="section-label reveal" aria-hidden="true">Portfolio</p>
     <h2 class="section-title reveal" id="works-title">Works</h2>
     <p class="section-title-ja reveal">制作実績</p>
 
@@ -185,12 +197,9 @@
       <!-- 01 HIRO Entry Form -->
       <article class="work-card reveal" data-category="web" role="listitem">
         <div class="work-img work-img--web-hiro">
-          <!--
-            Performance: loading="lazy" で below-fold 画像の遅延読み込み
-                         decoding="async" でメインスレッドのブロックを防止
-          -->
           <img src="logo-20260418103055ut23hvvv8m-s.png"
-               alt="HIRO 訪問看護ステーション ロゴ — 応募エントリーフォームのサムネイル"
+               width="142" height="142"
+               alt="HIRO 訪問看護ステーション ロゴ：応募エントリーフォームのサムネイル"
                loading="lazy"
                decoding="async">
         </div>
@@ -209,8 +218,11 @@
       <!-- 02 和心 Infographic 1 -->
       <article class="work-card reveal reveal-d1" data-category="infographic" role="listitem">
         <div class="work-img">
-          <img src="和心訪問看護の利用手順と専門ケア.png"
-               alt="和心（WAGOKORO）訪問看護 — 利用手順と専門ケアのインフォグラフィック"
+          <img src="img/wagokoro-care-640.webp"
+               srcset="img/wagokoro-care-640.webp 640w, img/wagokoro-care-1200.webp 1200w"
+               sizes="(max-width: 768px) 100vw, 50vw"
+               width="640" height="640"
+               alt="和心（WAGOKORO）訪問看護：利用手順と専門ケアのインフォグラフィック"
                loading="lazy"
                decoding="async">
         </div>
@@ -229,8 +241,11 @@
       <!-- 03 精神科 Step Guide -->
       <article class="work-card reveal reveal-d2" data-category="infographic" role="listitem">
         <div class="work-img">
-          <img src="精神科訪問看護のステップガイド.png"
-               alt="和心訪問看護 — 精神科訪問看護ステップガイドのインフォグラフィック"
+          <img src="img/wagokoro-steps-640.webp"
+               srcset="img/wagokoro-steps-640.webp 640w, img/wagokoro-steps-1200.webp 1200w"
+               sizes="(max-width: 768px) 100vw, 50vw"
+               width="640" height="640"
+               alt="和心訪問看護：精神科訪問看護ステップガイドのインフォグラフィック"
                loading="lazy"
                decoding="async">
         </div>
@@ -249,8 +264,11 @@
       <!-- 04 Siesta Flyer -->
       <article class="work-card reveal reveal-d3" data-category="design" role="listitem">
         <div class="work-img">
-          <img src="iCeIWyyM31_full.png"
-               alt="Beauty Salon Siesta — リフトアップ3施術（チタニウムリフト・オンダリフト・プラズマリフト）プロモーションチラシ"
+          <img src="img/siesta-flyer-640.webp"
+               srcset="img/siesta-flyer-640.webp 640w, img/siesta-flyer-1200.webp 1200w"
+               sizes="(max-width: 768px) 100vw, 50vw"
+               width="640" height="905"
+               alt="Beauty Salon Siesta：リフトアップ3施術（チタニウムリフト・オンダリフト・プラズマリフト）プロモーションチラシ"
                loading="lazy"
                decoding="async">
         </div>
@@ -270,7 +288,8 @@
       <article class="work-card reveal reveal-d4" data-category="logo" role="listitem">
         <div class="work-img work-img--logo-mediwell">
           <img src="apple-touch-icon.png"
-               alt="mediwell — ブランドロゴ（青と紫のひし形 × 筆記体ロゴタイプ）"
+               width="180" height="145"
+               alt="mediwell：ブランドロゴ（青と紫のひし形 × 筆記体ロゴタイプ）"
                loading="lazy"
                decoding="async">
         </div>
@@ -290,7 +309,8 @@
       <article class="work-card reveal reveal-d5" data-category="logo" role="listitem">
         <div class="work-img work-img--logo-hiro">
           <img src="logo-20260418103055ut23hvvv8m-s.png"
-               alt="HIRO Home Visit Nursing — ブランドロゴ（芦屋 2023）"
+               width="142" height="142"
+               alt="HIRO Home Visit Nursing：ブランドロゴ（芦屋 2023）"
                loading="lazy"
                decoding="async">
         </div>
@@ -309,54 +329,61 @@
     </div>
   </section>
 
-  <div class="divider" role="separator" aria-hidden="true"></div>
-
   <!-- ══ SKILLS ══ -->
   <section class="skills" id="skills" aria-labelledby="skills-title">
-    <p class="section-label reveal" aria-hidden="true">Expertise</p>
     <h2 class="section-title reveal" id="skills-title">Skills</h2>
     <p class="section-title-ja reveal">スキル・専門領域</p>
 
-    <div class="skills-grid" role="list" aria-label="スキル一覧">
-      <div class="skill-card reveal" role="listitem">
-        <div class="skill-number" aria-hidden="true">01</div>
+    <ul class="skills-list" aria-label="スキル一覧">
+      <li class="skill reveal">
         <h3 class="skill-name">AI コンテンツ生成</h3>
         <p class="skill-desc">Claude・NotebookLM を活用した資料・インフォグラフィック・コピーライティングの高速制作</p>
-      </div>
-      <div class="skill-card reveal reveal-d1" role="listitem">
-        <div class="skill-number" aria-hidden="true">02</div>
+      </li>
+      <li class="skill reveal reveal-d1">
         <h3 class="skill-name">Web フォーム / LP</h3>
         <p class="skill-desc">HTML / CSS による高品質なエントリーフォーム・ランディングページ・マイクロサイトの構築</p>
-      </div>
-      <div class="skill-card reveal reveal-d2" role="listitem">
-        <div class="skill-number" aria-hidden="true">03</div>
+      </li>
+      <li class="skill reveal reveal-d2">
         <h3 class="skill-name">印刷物デザイン</h3>
         <p class="skill-desc">チラシ・パンフレット・PDF 帳票の AI 支援設計。ReportLab / Python による自動生成にも対応</p>
-      </div>
-      <div class="skill-card reveal reveal-d3" role="listitem">
-        <div class="skill-number" aria-hidden="true">04</div>
+      </li>
+      <li class="skill reveal reveal-d3">
         <h3 class="skill-name">ブランドデザイン</h3>
         <p class="skill-desc">ロゴ・アイコン・カラーパレット策定。医療・美容業界に適したブランドアイデンティティを提案</p>
-      </div>
-    </div>
+      </li>
+    </ul>
 
-    <div class="sector-grid reveal">
-      <div class="sector-item">
+    <div class="sector-grid">
+      <article class="sector-item reveal">
+        <div class="sector-img">
+          <img src="img/wagokoro-steps-640.webp"
+               srcset="img/wagokoro-steps-640.webp 640w, img/wagokoro-steps-1200.webp 1200w"
+               sizes="(max-width: 768px) 100vw, 50vw"
+               width="640" height="640"
+               alt=""
+               loading="lazy"
+               decoding="async">
+        </div>
         <h3>Medical &amp; Nursing</h3>
         <p>
-          訪問看護・在宅医療・精神科ケアなど医療・介護業界の
-          複雑な情報を、患者や家族に伝わるビジュアルに変換。
-          NotebookLM を活用した根拠ある情報可視化を強みとしています。
+          訪問看護・在宅医療・精神科ケアなど医療・介護業界の複雑な情報を、患者や家族に伝わるビジュアルに変換。NotebookLM を活用した根拠ある情報可視化を強みとしています。
         </p>
-      </div>
-      <div class="sector-item">
+      </article>
+      <article class="sector-item reveal reveal-d2">
+        <div class="sector-img">
+          <img src="img/siesta-flyer-640.webp"
+               srcset="img/siesta-flyer-640.webp 640w, img/siesta-flyer-1200.webp 1200w"
+               sizes="(max-width: 768px) 100vw, 50vw"
+               width="640" height="905"
+               alt=""
+               loading="lazy"
+               decoding="async">
+        </div>
         <h3>Beauty &amp; Wellness</h3>
         <p>
-          美容サロン向けのチラシ・SNS コンテンツ・ブランドロゴを制作。
-          施術の魅力を引き出す洗練されたビジュアル表現で、
-          集客と信頼構築を支援します。
+          美容サロン向けのチラシ・SNS コンテンツ・ブランドロゴを制作。施術の魅力を引き出す洗練されたビジュアル表現で、集客と信頼構築を支援します。
         </p>
-      </div>
+      </article>
     </div>
   </section>
 
@@ -366,72 +393,69 @@
     <h2 class="section-title reveal" id="contact-title">Contact</h2>
     <p class="section-title-ja reveal">お問い合わせ</p>
 
-    <div class="contact-grid">
-      <div class="contact-text reveal">
-        <p>
-          制作のご依頼・ご相談はお気軽にどうぞ。<br>
-          医療・介護・美容業界の AI 活用について、
-          まずはヒアリングからお受けしています。<br><br>
-          お返事は通常 1〜2 営業日以内にお送りします。
-        </p>
-        <ul class="contact-list" aria-label="対応サービス">
-          <li class="contact-list-item">医療・訪問看護のコンテンツ制作</li>
-          <li class="contact-list-item">美容サロンのデザイン・ブランディング</li>
-          <li class="contact-list-item">AI ツール導入サポート</li>
-          <li class="contact-list-item">Web フォーム・LP 制作</li>
-          <li class="contact-list-item">インフォグラフィック制作</li>
-        </ul>
-      </div>
-
-      <!--
-        Security: onsubmit 属性を削除し js/main.js で addEventListener を使用
-        Accessibility: label の for 属性と input の id を対応させて支援技術に対応
-      -->
-      <form class="contact-form reveal reveal-d2" novalidate aria-label="お問い合わせフォーム">
-        <div class="form-group">
-          <label for="contact-name">NAME</label>
-          <input id="contact-name"
-                 type="text"
-                 name="name"
-                 placeholder="お名前"
-                 required
-                 maxlength="50"
-                 autocomplete="name"
-                 aria-required="true">
-        </div>
-        <div class="form-group">
-          <label for="contact-email">EMAIL</label>
-          <input id="contact-email"
-                 type="email"
-                 name="email"
-                 placeholder="メールアドレス"
-                 required
-                 maxlength="100"
-                 autocomplete="email"
-                 aria-required="true">
-        </div>
-        <div class="form-group">
-          <label for="contact-service">SERVICE</label>
-          <input id="contact-service"
-                 type="text"
-                 name="service"
-                 placeholder="ご依頼内容（例：チラシ制作・Web フォーム）"
-                 maxlength="100"
-                 autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label for="contact-message">MESSAGE</label>
-          <textarea id="contact-message"
-                    name="message"
-                    placeholder="詳細をお聞かせください"
-                    required
-                    maxlength="1000"
-                    aria-required="true"></textarea>
-        </div>
-        <button type="submit" class="submit-btn" aria-label="メッセージを送信">SEND MESSAGE</button>
-      </form>
+    <div class="contact-intro reveal">
+      <p>
+        制作のご依頼・ご相談はお気軽にどうぞ。医療・介護・美容業界の AI 活用について、まずはヒアリングからお受けしています。お返事は通常 1〜2 営業日以内にお送りします。
+      </p>
+      <ul class="contact-list" aria-label="対応サービス">
+        <li class="contact-list-item">医療・訪問看護のコンテンツ制作</li>
+        <li class="contact-list-item">美容サロンのデザイン・ブランディング</li>
+        <li class="contact-list-item">AI ツール導入サポート</li>
+        <li class="contact-list-item">Web フォーム・LP 制作</li>
+        <li class="contact-list-item">インフォグラフィック制作</li>
+      </ul>
     </div>
+
+    <!--
+      Security: onsubmit 属性を削除し js/main.js で addEventListener を使用
+      Accessibility: label の for 属性と input の id を対応させて支援技術に対応
+    -->
+    <form class="contact-form reveal reveal-d2" novalidate aria-label="お問い合わせフォーム">
+      <div class="form-group">
+        <label for="contact-name">NAME</label>
+        <input id="contact-name"
+               type="text"
+               name="name"
+               placeholder="お名前"
+               required
+               maxlength="50"
+               autocomplete="name"
+               aria-required="true">
+      </div>
+      <div class="form-group">
+        <label for="contact-email">EMAIL</label>
+        <input id="contact-email"
+               type="email"
+               name="email"
+               placeholder="メールアドレス"
+               required
+               maxlength="100"
+               autocomplete="email"
+               aria-required="true">
+      </div>
+      <div class="form-group form-group--full">
+        <label for="contact-service">SERVICE</label>
+        <input id="contact-service"
+               type="text"
+               name="service"
+               placeholder="ご依頼内容（例：チラシ制作・Web フォーム）"
+               maxlength="100"
+               autocomplete="off">
+      </div>
+      <div class="form-group form-group--full">
+        <label for="contact-message">MESSAGE</label>
+        <textarea id="contact-message"
+                  name="message"
+                  placeholder="詳細をお聞かせください"
+                  required
+                  maxlength="1000"
+                  aria-required="true"></textarea>
+      </div>
+      <button type="submit" class="submit-btn" aria-label="メッセージを送信">SEND MESSAGE</button>
+    </form>
   </section>
+
+  </main>
 
   <!-- ══ FOOTER ══ -->
   <footer role="contentinfo">
